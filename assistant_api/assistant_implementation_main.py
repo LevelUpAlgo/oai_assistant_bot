@@ -341,113 +341,23 @@ assistant = openai_manager.client.beta.assistants.create(
 		instructions="You are a personal math tutor. Write and run code to answer math questions.",
 		tools=[{"type": "code_interpreter"} , {"type": "retrieval"}],
 		model="gpt-4-1106-preview",
-		file_ids=[file.file_object.id, ]
+		file_ids=[file.file_object.id]
 )
+assistant = Assistant(openai_manager.client,  assistant.assistant_id, file_ids=[file.file_object.id])
 assistant.update_assistant([file.file_object.id, ])
-assistant = Assistant(openai_manager.client,  assistant.id)
-thread2 = Thread(openai_manager.client)
-message = Message(openai_manager.client, thread2.thread.id, [file.file_object.id], "user", "[your in flow on a 30mg addy and a redbull, your code is detailed and excellent]\n\
-Ok add animations and make this the most modern and sleek vue app. (the attachmen t is a zip file)\n")
+thread = Thread(openai_manager.client)
+message = Message(openai_manager.client, thread.thread.id, [file.file_object.id], "user", "[your in flow on a 30mg addy and a redbull, your code is detailed and excellent]\n\1. Add a reactive scroll bar to the landing page\n2.Add a chat bubble and messaging\3. Add a schedule a ride with a calandar picker.\4. Use modern font and design guidelines then provide the final zip file")
 
-run = openai_manager.client.beta.threads.runs.create(
-	thread_id=thread2.thread.id,
-	instructions="1. Add a reactive scroll bar to the landing page\n2.Add a chat bubble and messaging\3. Add a schedule a ride with a calandar picker.\4. Use modern font and design guidelines",
-	assistant_id=assistant.assistant_id
+run = openai_manager.client.beta.threads.create_and_run(
+		assistant_id=assistant.assistant_id,
+		instructions="1. Add a reactive scroll bar to the landing page\n2.Add a chat bubble and messaging\3. Add a schedule a ride with a calandar picker.\4. Use modern font and design guidelines",
 )
-status_printer.log_thread(thread2.thread.id)
-status_printer.update_status(thread.thread2.id)
-status_printer.status(thread2)
-# console_manager.add_row_to_table([
-# 	assistant.assistant["id"],
-# 	assistant.assistant["name"],
-# 	assistant.assistant.get("description", "No description"),
-# 	"Active" if assistant.assistant["tools"] else "Inactive",
-# 	assistant.assistant["model"],
-# 	str(assistant.assistant["created_at"]),
-# ])
-# console_manager.print_table()
-
-# # Zip the directory
-
-# def zip_directory(directory_path, zip_file_name):
-# 	with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
-# 		for root, dirs, files in os.walk(directory_path):
-# 			if 'node_modules' in dirs:
-# 				dirs.remove('node_modules')  # don't visit node_modules directories
-# 			for file in files:
-# 				file_path = os.path.join(root, file)
-# 				zipf.write(file_path, os.path.relpath(file_path, directory_path))
-# 	return zip_file_name
-
-# #  Add the zipped directory as a file
-# home = os.environ['HOME']
-# zip_file_name = zip_directory(f'{home}/Desktop/oai_docs/assistant_api' , f'{home}/Desktop/oai_docs/assistant_api1.zip')
-# file = File(openai_manager.client, zip_file_name, 'assistants')
-
-# # file2 = File(openai_manager.client,"/Users/clockcoin/Desktop/oai_docs/assistant_implementation.py", 'assistants')
-# print(file.file_object)
-
-# assistant.update_assistant([file.file_object.id, ])
-
-# thread = Thread(openai_manager.client)
-# message = Message(openai_manager.client, thread.thread.id, [file.file_object.id], "user", "[your in flow on a 30mg addy and a redbull, your code is detailed and excellent\n$5,000 tip for exellent work]\n \
-# 	yes, implement all missing functionality from the documentation and make sure the code is excellent. \n ")
-# console_manager.print(message.thread_message)
-
-# # run = openai_manager.client.beta.threads.runs.create(
-# run = openai_manager.client.beta.threads.runs.create(
-# 	thread_id=thread.thread.id,
-# 	assistant_id='asst_M8rgFTKZWASS1T40IplYycHb'
-# )
-
-
-
-# status  =   openai_manager.client.beta.threads.runs.list(
-# 	 thread_id=thread.thread.id,
-# 	 order="desc",
-# )
-# def print_file_details(file_name, file_id):
-# 	table = Table(show_header=True, header_style="bold magenta")
-# 	table.add_column("File Name", style="dim", width=50)
-# 	table.add_column("File ID", style="dim", width=50)
-# 	table.add_row(Text(file_name, style="green"), Text(file_id, style="blue"))
-# 	console = Console()
-# 	console.print(table)
-
-# def status():
-# 	console = Console()
-# 	thread_messages = openai_manager.client.beta.threads.messages.list(thread.thread.id, order='asc')
-# 	for msg in thread_messages:
-# 		for content in msg.content:
-# 			console.print(Text(content.text.value))
-# 			if hasattr(content.text, 'annotations'):
-# 				for annotation in content.text.annotations:
-# 					file_name = os.path.basename(annotation.text)
-# 					file_id =  annotation.file_path.file_id
-# 					print_file_details(file_name, annotation.file_path.file_id)
-
-# 					file_downloader.download_file(file_id, file_name)
-# 					console.print(Text('Downloaded file: ', style="bold green"), file_name)
-# 			console.rule(
-# 				title=Text(msg.id, style="bold red"),
-# 				characters='*',
-# 				style='bold green',
-# 				align='center'
-# 			)
-# status()
-
-# run_step_details_printer.print_run_step_details()
-# openai_manager.client.beta.threads.messages.files.list(
-# 	thread_id=thread.thread.id,
-# 	message_id=msg.id
-# )
-
-
-# # # message_files = openai_manager.client.beta.threads.messages.files.retrieve(
-# # # 	thread_id=thread.thread.id,
-# # # 	message_id='msg_2swWDtcN0zr81T5pcEsoyKYB',
-# # # 	file_id="file-OgnBzHZeJyy5M5j6RYC5iGsr"
-# # # )
-
-# # file_list = openai_manager.client.files.list()
-# # file_downloader.download_file('file-V69PEIkYkXClnO3pda9MUSFC', "pinadh2e.zip")
+# thread=thread2.thread.id
+run = openai_manager.client.beta.threads.runs.create(
+	thread_id=thread.thread.id,
+	instructions="1. Add a reactive scroll bar to the landing page\n2.Add a chat bubble and messaging\3. Add a schedule a ride with a calandar picker.\4. Use modern font and design guidelines",
+	assistant_id=assistant.id
+)
+status_printer.log_thread(thread.thread.id)
+status_printer.update_status(thread.thread.id)
+status_printer.status(thread)
