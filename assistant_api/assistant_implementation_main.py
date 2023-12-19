@@ -233,73 +233,97 @@ class FileDownloader(IFileDownloader):
 		info.stream_to_file(output_path)
 
 class DirectoryManager:
-    @staticmethod
-    def zip_directory(directory_path, zip_file_name):
-        with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, dirs, files in os.walk(directory_path):
-                if 'node_modules' in dirs:
-                    dirs.remove('node_modules')  # don't visit node_modules directories
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    zipf.write(file_path, os.path.relpath(file_path, directory_path))
-        return zip_file_name
+		@staticmethod
+		def zip_directory(directory_path, zip_file_name):
+				with zipfile.ZipFile(zip_file_name, 'w', zipfile.ZIP_DEFLATED) as zipf:
+						for root, dirs, files in os.walk(directory_path):
+								if 'node_modules' in dirs:
+										dirs.remove('node_modules')  # don't visit node_modules directories
+								for file in files:
+										file_path = os.path.join(root, file)
+										zipf.write(file_path, os.path.relpath(file_path, directory_path))
+				return zip_file_name
+
 
 
 class StatusPrinter:
-    def __init__(self, openai_manager, console_manager, file_downloader):
-        self.openai_manager = openai_manager
-        self.console_manager = console_manager
-        self.file_downloader = file_downloader
-        self.console = Console()
+		def __init__(self, openai_manager, console_manager, file_downloader):
+				self.openai_manager = openai_manager
+				self.console_manager = console_manager
+				self.file_downloader = file_downloader
+				self.console = Console()
 
-    def print_file_details(self, file_name, file_id):
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("File Name", style="dim", width=50)
-        table.add_column("File ID", style="dim", width=50)
-        table.add_row(Text(file_name, style="green"), Text(file_id, style="blue"))
-        self.console.print(table)
+		def print_file_details(self, file_name, file_id):
+				table = Table(show_header=True, header_style="bold magenta")
+				table.add_column("File Name", style="dim", width=50)
+				table.add_column("File ID", style="dim", width=50)
+				table.add_row(Text(file_name, style="green"), Text(file_id, style="blue"))
+				self.console.print(table)
 
-    def status(self, thread):
-        thread_messages = self.openai_manager.client.beta.threads.messages.list(thread.thread.id, order='asc')
-        for msg in thread_messages:
-            for content in msg.content:
-                self.console.print(Text(content.text.value))
-                if hasattr(content.text, 'annotations'):
-                    for annotation in content.text.annotations:
-                        file_name = os.path.basename(annotation.text)
-                        file_id =  annotation.file_path.file_id
-                        self.print_file_details(file_name, annotation.file_path.file_id)
+		def status(self, thread):
+				thread_messages = self.openai_manager.client.beta.threads.messages.list(thread.thread.id, order='asc')
+				for msg in thread_messages:
+						for content in msg.content:
+								self.console.print(Text(content.text.value))
+								if hasattr(content.text, 'annotations'):
+										for annotation in content.text.annotations:
+												file_name = os.path.basename(annotation.text)
+												file_id =  annotation.file_path.file_id
+												self.print_file_details(file_name, annotation.file_path.file_id)
 
-                        self.file_downloader.download_file(file_id, file_name)
-                        self.console.print(Text('Downloaded file: ', style="bold green"), file_name)
-                self.console.rule(
-                    title=Text(msg.id, style="bold red"),
-                    characters='*',
-                    style='bold green',
-                    align='center'
-                )
+												self.file_downloader.download_file(file_id, file_name)
+												self.console.print(Text('Downloaded file: ', style="bold green"), file_name)
+								self.console.rule(
+										title=Text(msg.id, style="bold red"),
+										characters='*',
+										style='bold green',
+										align='center'
+								)
 
-    def update_status(self, thread_id):
-        while True:
-            runs = self.openai_manager.client.beta.threads.runs.list(thread_id=thread_id, order="desc")
-            for run in runs.data:
-                self.console.clear()
-                table = Table(show_header=True, header_style="bold magenta")
-                table.add_column("ID", style="dim", width=50)
-                table.add_column("Status", style="dim", width=50)
-                table.add_column("Created At", style="dim", width=50)
-                table.add_column("Started At", style="dim", width=50)
-                table.add_column("Expires At", style="dim", width=50)
-                table.add_row(
-                    # Text(run.id, style="green"),
-                    Text(run.status, style="blue"),
-                    Text(datetime.fromtimestamp(run.created_at).strftime('%Y-%m-%d %H:%M:%S'), style="green"),
-                    Text(datetime.fromtimestamp(run.started_at).strftime('%Y-%m-%d %H:%M:%S'), style="blue"),
-                    Text(datetime.fromtimestamp(run.expires_at).strftime('%Y-%m-%d %H:%M:%S'), style="green")
-                )
-                self.console.print(table)
-            time.sleep(2)
+		def update_status(self, thread_id):
+				while True:
+						runs = self.openai_manager.client.beta.threads.runs.list(thread_id=thread_id, order="desc")
+						for run in runs.data:
+								self.console.clear()
+								table = Table(show_header=True, header_style="bold magenta")
+								table.add_column("ID", style="dim", width=50)
+								table.add_column("Status", style="dim", width=50)
+								table.add_column("Created At", style="dim", width=50)
+								table.add_column("Started At", style="dim", width=50)
+								table.add_column("Expires At", style="dim", width=50)
+								table.add_row(
+										Text(run.id, style="green"),
+										Text(run.status, style="blue"),
+										Text(datetime.fromtimestamp(run.created_at).strftime('%Y-%m-%d %H:%M:%S'), style="green"),
+										Text(datetime.fromtimestamp(run.started_at).strftime('%Y-%m-%d %H:%M:%S'), style="blue"),
+										Text(datetime.fromtimestamp(run.expires_at).strftime('%Y-%m-%d %H:%M:%S'), style="green")
+								)
+								self.console.print(table)
+						time.sleep(2)
+
+		def log_thread(self, thread_id):
+				while True:
+						messages = self.openai_manager.client.beta.threads.messages.list(thread_id=thread_id)
+						for message in messages.data:
+								self.console.clear()
+								table = Table(show_header=True, header_style="bold magenta")
+								table.add_column("Message ID", style="dim", width=50)
+								table.add_column("Role", style="dim", width=50)
+								table.add_column("Content", style="dim", width=50)
+								table.add_column("Created At", style="dim", width=50)
+								table.add_row(
+										Text(message.id, style="green"),
+										Text(message.role, style="blue"),
+										Text(message.content[0].text.value, style="green"),
+										Text(datetime.fromtimestamp(message.created_at).strftime('%Y-%m-%d %H:%M:%S'), style="blue")
+								)
+								self.console.print(table)
+						time.sleep(2)
+
+
+
 # Usage
+
 console_manager = ConsoleManager()
 openai_manager = OpenAIManager()
 run_step_details_printer = RunStepDetailsPrinter(console_manager)
@@ -310,25 +334,29 @@ directory_manager = DirectoryManager()
 # Zip the directory
 home = os.environ['HOME']
 zip_file_name = directory_manager.zip_directory(f'{home}/Desktop/oai_docs/gentlement_club_nyc' , f'{home}/Desktop/oai_docs/gentlement_club_nyc.zip')
-file = File(openai_manager.client, "/Users/clockcoin/Desktop/oai_docs/downloads/nyc_limo_service_spa.zip", 'assistants')
-assistant.update_assistant([file.file_object.id, ])
+file = File(openai_manager.client, "/Users/clockcoin/Desktop/oai_docs/downloads/nyc_limo_service_spa_updated.zip", 'assistants')
 
-
-
-
-assistant = Assistant(openai_manager.client, "asst_M8rgFTKZWASS1T40IplYycHb")
-thread = Thread(openai_manager.client)
-
-message = Message(openai_manager.client, thread.thread.id, [file.file_object.id], "user", "[your in flow on a 30mg addy and a redbull, your code is detailed and excellent]\n\
-I provided the background image to use as fill for the SPA and the logo. Implement them and add SOTA styling.\n\ ")
-run = openai_manager.client.beta.threads.runs.create(
-	thread_id=thread.thread.id,
-	assistant_id='asst_M8rgFTKZWASS1T40IplYycHb'
+assistant = openai_manager.client.beta.assistants.create(
+		name="Fullstack engineer (Web dev)",
+		instructions="You are a personal math tutor. Write and run code to answer math questions.",
+		tools=[{"type": "code_interpreter"} , {"type": "retrieval"}],
+		model="gpt-4-1106-preview",
+		file_ids=[file.file_object.id, ]
 )
+assistant.update_assistant([file.file_object.id, ])
+assistant = Assistant(openai_manager.client,  assistant.id)
+thread2 = Thread(openai_manager.client)
+message = Message(openai_manager.client, thread2.thread.id, [file.file_object.id], "user", "[your in flow on a 30mg addy and a redbull, your code is detailed and excellent]\n\
+Ok add animations and make this the most modern and sleek vue app. (the attachmen t is a zip file)\n")
 
-status_printer.status(thread)
-status_printer.update_status(thread.thread.id)
-
+run = openai_manager.client.beta.threads.runs.create(
+	thread_id=thread2.thread.id,
+	instructions="1. Add a reactive scroll bar to the landing page\n2.Add a chat bubble and messaging\3. Add a schedule a ride with a calandar picker.\4. Use modern font and design guidelines",
+	assistant_id=assistant.assistant_id
+)
+status_printer.log_thread(thread2.thread.id)
+status_printer.update_status(thread.thread2.id)
+status_printer.status(thread2)
 # console_manager.add_row_to_table([
 # 	assistant.assistant["id"],
 # 	assistant.assistant["name"],
